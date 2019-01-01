@@ -12,12 +12,16 @@ with stdenv.lib;
 { enableNpm ? true, version, sha256, patches ? [] } @args:
 
 let
-
   inherit (darwin.apple_sdk.frameworks) CoreServices ApplicationServices;
+
+  majorVersion = versions.major version;
+  minorVersion = versions.minor version;
 
   baseName = if enableNpm then "nodejs" else "nodejs-slim";
 
-  sharedLibDeps = { inherit openssl zlib libuv; } // (optionalAttrs (!stdenv.isDarwin) { inherit http-parser; });
+  useSharedHttpParser = !stdenv.isDarwin && versionOlder "${majorVersion}.${minorVersion}" "11.4";
+
+  sharedLibDeps = { inherit openssl zlib libuv; } // (optionalAttrs useSharedHttpParser { inherit http-parser; });
 
   sharedConfigureFlags = concatMap (name: [
     "--shared-${name}"
@@ -42,7 +46,7 @@ in
     name = "${baseName}-${version}";
 
     src = fetchurl {
-      url = "http://nodejs.org/dist/v${version}/node-v${version}.tar.xz";
+      url = "https://nodejs.org/dist/v${version}/node-v${version}.tar.xz";
       inherit sha256;
     };
 
@@ -101,9 +105,9 @@ in
     '';
 
     passthru.updateScript = import ./update.nix {
-      inherit writeScript coreutils gnugrep jq curl common-updater-scripts gnupg nix;
+      inherit stdenv writeScript coreutils gnugrep jq curl common-updater-scripts gnupg nix;
       inherit (stdenv) lib;
-      majorVersion = with stdenv.lib; elemAt (splitString "." version) 0;
+      inherit majorVersion;
     };
 
     meta = {

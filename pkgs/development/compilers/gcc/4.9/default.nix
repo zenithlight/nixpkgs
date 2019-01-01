@@ -1,7 +1,7 @@
-{ stdenv, targetPackages, fetchurl, noSysDirs, fetchpatch
+{ stdenv, targetPackages, fetchurl, fetchpatch, noSysDirs
 , langC ? true, langCC ? true, langFortran ? false
-, langObjC ? targetPlatform.isDarwin
-, langObjCpp ? targetPlatform.isDarwin
+, langObjC ? stdenv.targetPlatform.isDarwin
+, langObjCpp ? stdenv.targetPlatform.isDarwin
 , langJava ? false
 , langGo ? false
 , profiledCompiler ? false
@@ -20,14 +20,14 @@
 , libXrandr ? null, libXi ? null, inputproto ? null, randrproto ? null
 , x11Support ? langJava
 , enableMultilib ? false
-, enablePlugin ? hostPlatform == buildPlatform # Whether to support user-supplied plug-ins
+, enablePlugin ? stdenv.hostPlatform == stdenv.buildPlatform # Whether to support user-supplied plug-ins
 , name ? "gcc"
 , libcCross ? null
 , crossStageStatic ? false
 , # Strip kills static libs of other archs (hence no cross)
-  stripped ? hostPlatform == buildPlatform && targetPlatform == hostPlatform
+  stripped ? stdenv.hostPlatform == stdenv.buildPlatform
+          && stdenv.targetPlatform == stdenv.hostPlatform
 , gnused ? null
-, buildPlatform, hostPlatform, targetPlatform
 , buildPackages
 }:
 
@@ -42,7 +42,7 @@ assert cloog != null -> isl != null;
 assert libelf != null -> zlib != null;
 
 # Make sure we get GNU sed.
-assert hostPlatform.isDarwin -> gnused != null;
+assert stdenv.hostPlatform.isDarwin -> gnused != null;
 
 # The go frontend is written in c++
 assert langGo -> langCC;
@@ -52,11 +52,10 @@ with builtins;
 
 let version = "4.9.4";
 
-    enableParallelBuilding = true;
+    inherit (stdenv) buildPlatform hostPlatform targetPlatform;
 
     patches =
-      [ ../use-source-date-epoch.patch ]
-      ++ optionals enableParallelBuilding [ ../parallel-bconfig.patch ./parallel-strsignal.patch ]
+      [ ../use-source-date-epoch.patch ../parallel-bconfig.patch ./parallel-strsignal.patch ]
       ++ optional (targetPlatform != hostPlatform) ../libstdc++-target.patch
       ++ optional noSysDirs ../no-sys-dirs.patch
       ++ optional langFortran ../gfortran-driving.patch
@@ -119,6 +118,7 @@ let version = "4.9.4";
         "--enable-sjlj-exceptions"
         "--enable-threads=win32"
         "--disable-win32-registry"
+        "--disable-libmpx" # requires libc
       ] else if crossStageStatic then [
         "--disable-libssp"
         "--disable-nls"
@@ -127,11 +127,12 @@ let version = "4.9.4";
         "--disable-libgomp"
         "--disable-libquadmath"
         "--disable-shared"
-        "--disable-libatomic"  # libatomic requires libc
-        "--disable-decimal-float" # libdecnumber requires libc
+        "--disable-libatomic" # requires libc
+        "--disable-decimal-float" # requires libc
+        "--disable-libmpx" # requires libc
       ] else [
         (if crossDarwin then "--with-sysroot=${getLib libcCross}/share/sysroot"
-         else                "--with-headers=${getDev libcCross}/include")
+         else                "--with-headers=${getDev libcCross}${libcCross.incdir or "/include"}")
         "--enable-__cxa_atexit"
         "--enable-long-long"
       ] ++
@@ -152,10 +153,15 @@ let version = "4.9.4";
             # In uclibc cases, libgomp needs an additional '-ldl'
             # and as I don't know how to pass it, I disable libgomp.
             "--disable-libgomp"
-          ] ++ [
-          "--enable-threads=posix"
-          "--enable-nls"
-          "--disable-decimal-float" # No final libdecnumber (it may work only in 386)
+          ]
+          ++ optional (targetPlatform.libc == "newlib") "--with-newlib"
+          ++ optional (targetPlatform.libc == "avrlibc") "--with-avrlibc"
+          ++ [
+            "--enable-threads=${if targetPlatform.isUnix then "posix"
+                                else if targetPlatform.isWindows then "win32"
+                                else "single"}"
+            "--enable-nls"
+            "--disable-decimal-float" # No final libdecnumber (it may work only in 386)
         ]));
     stageNameAddon = if crossStageStatic then "-stage-static" else "-stage-final";
     crossNameAddon = if targetPlatform != hostPlatform then "${targetPlatform.config}${stageNameAddon}-" else "";
@@ -179,7 +185,7 @@ stdenv.mkDerivation ({
 
   inherit patches;
 
-  hardeningDisable = [ "format" ];
+  hardeningDisable = [ "format" "pie" ];
 
   outputs = if langJava || langGo then ["out" "man" "info"]
     else [ "out" "lib" "man" "info" ];
@@ -206,9 +212,7 @@ stdenv.mkDerivation ({
         ''
     else null;
 
-  # TODO(@Ericson2314): Make passthru instead. Weird to avoid mass rebuild,
-  crossStageStatic = targetPlatform == hostPlatform || crossStageStatic;
-  inherit noSysDirs staticCompiler langJava
+  inherit noSysDirs staticCompiler langJava crossStageStatic
     libcCross crossMingw;
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
@@ -232,8 +236,6 @@ stdenv.mkDerivation ({
     ++ (optional (zlib != null) zlib)
     ++ (optionals langJava [ boehmgc zip unzip ])
     ++ (optionals javaAwtGtk ([ gtk2 libart_lgpl ] ++ xlibs))
-    ++ (optionals (targetPlatform != hostPlatform) [targetPackages.stdenv.cc.bintools])
-
     # The builder relies on GNU sed (for instance, Darwin's `sed' fails with
     # "-i may not be used with stdin"), and `stdenvNative' doesn't provide it.
     ++ (optional hostPlatform.isDarwin gnused)
@@ -248,8 +250,7 @@ stdenv.mkDerivation ({
   ''
   + stdenv.lib.optionalString (langJava || langGo) ''
     export lib=$out;
-  ''
-  ;
+  '';
 
   dontDisableStatic = true;
 
@@ -261,7 +262,8 @@ stdenv.mkDerivation ({
     [
       "--with-gmp-include=${gmp.dev}/include"
       "--with-gmp-lib=${gmp.out}/lib"
-      "--with-mpfr=${mpfr.dev}"
+      "--with-mpfr-include=${mpfr.dev}/include"
+      "--with-mpfr-lib=${mpfr.out}/lib"
       "--with-mpc=${libmpc}"
     ] ++
     optional (libelf != null) "--with-libelf=${libelf}" ++
@@ -290,7 +292,7 @@ stdenv.mkDerivation ({
       }"
     ] ++
 
-    (if enableMultilib
+    (if (enableMultilib || targetPlatform.isAvr)
       then ["--enable-multilib" "--disable-libquadmath"]
       else ["--disable-multilib"]) ++
     optional (!enableShared) "--disable-shared" ++
@@ -346,7 +348,7 @@ stdenv.mkDerivation ({
     then "install-strip"
     else "install";
 
-  # http://gcc.gnu.org/install/specific.html#x86-64-x-solaris210
+  # https://gcc.gnu.org/install/specific.html#x86-64-x-solaris210
   ${if hostPlatform.system == "x86_64-solaris" then "CC" else null} = "gcc -m64";
 
   # Setting $CPATH and $LIBRARY_PATH to make sure both `gcc' and `xgcc' find the
@@ -374,36 +376,40 @@ stdenv.mkDerivation ({
     ++ optional (zlib != null) zlib
     ++ optional langJava boehmgc
     ++ optionals javaAwtGtk xlibs
-    ++ optionals javaAwtGtk [ gmp mpfr ]));
+    ++ optionals javaAwtGtk [ gmp mpfr ]
+  ));
 
   EXTRA_TARGET_FLAGS = optionals
     (targetPlatform != hostPlatform && libcCross != null)
     ([
-      "-idirafter ${getDev libcCross}/include"
+      "-idirafter ${getDev libcCross}${libcCross.incdir or "/include"}"
     ] ++ optionals (! crossStageStatic) [
-      "-B${libcCross.out}/lib"
+      "-B${libcCross.out}${libcCross.libdir or "/lib"}"
     ]);
 
   EXTRA_TARGET_LDFLAGS = optionals
     (targetPlatform != hostPlatform && libcCross != null)
     ([
-      "-Wl,-L${libcCross.out}/lib"
+      "-Wl,-L${libcCross.out}${libcCross.libdir or "/lib"}"
     ] ++ (if crossStageStatic then [
-        "-B${libcCross.out}/lib"
+        "-B${libcCross.out}${libcCross.libdir or "/lib"}"
       ] else [
-        "-Wl,-rpath,${libcCross.out}/lib"
-        "-Wl,-rpath-link,${libcCross.out}/lib"
+        "-Wl,-rpath,${libcCross.out}${libcCross.libdir or "/lib"}"
+        "-Wl,-rpath-link,${libcCross.out}${libcCross.libdir or "/lib"}"
     ]));
 
-  passthru =
-    { inherit langC langCC langObjC langObjCpp langFortran langGo version; isGNU = true; };
+  passthru = {
+    inherit langC langCC langObjC langObjCpp langFortran langGo version;
+    isGNU = true;
+  };
 
-  inherit enableParallelBuilding enableMultilib;
+  enableParallelBuilding = true;
+  inherit enableMultilib;
 
   inherit (stdenv) is64bit;
 
   meta = {
-    homepage = http://gcc.gnu.org/;
+    homepage = https://gcc.gnu.org/;
     license = stdenv.lib.licenses.gpl3Plus;  # runtime support libraries are typically LGPLv3+
     description = "GNU Compiler Collection, version ${version}"
       + (if stripped then "" else " (with debugging info)");
@@ -422,7 +428,8 @@ stdenv.mkDerivation ({
     platforms =
       stdenv.lib.platforms.linux ++
       stdenv.lib.platforms.freebsd ++
-      stdenv.lib.platforms.illumos;
+      stdenv.lib.platforms.illumos ++
+      stdenv.lib.platforms.darwin;
   };
 }
 

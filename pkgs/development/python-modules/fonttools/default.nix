@@ -8,11 +8,11 @@
 
 buildPythonPackage rec {
   pname = "fonttools";
-  version = "3.28.0";
+  version = "3.33.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "ebf2ee25a6060e8551880a3b05d6ecadcdcfbd1b32fc272ff7b3acdb22945b6f";
+    sha256 = "196yl6m3fycrbsclcmg550821j18ga6dpghmk5nb1xi4j4yb62gq";
     extension = "zip";
   };
 

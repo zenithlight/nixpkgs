@@ -36,8 +36,6 @@ in {
   allowImportFromDerivation ? false,
   # ignored
   features ? null,
-
-  hostPlatform
 }:
 
 let
@@ -56,8 +54,8 @@ let
 
   commonMakeFlags = [
     "O=$(buildRoot)"
-  ] ++ stdenv.lib.optionals (hostPlatform.platform ? kernelMakeFlags)
-    hostPlatform.platform.kernelMakeFlags;
+  ] ++ stdenv.lib.optionals (stdenv.hostPlatform.platform ? kernelMakeFlags)
+    stdenv.hostPlatform.platform.kernelMakeFlags;
 
   drvAttrs = config_: platform: kernelPatches: configfile:
     let
@@ -249,13 +247,14 @@ let
           maintainers.thoughtpolice
         ];
         platforms = platforms.linux;
+        timeout = 14400; # 4 hours
       } // extraMeta;
     };
 in
 
 assert stdenv.lib.versionAtLeast version "4.14" -> libelf != null;
 assert stdenv.lib.versionAtLeast version "4.15" -> utillinux != null;
-stdenv.mkDerivation ((drvAttrs config hostPlatform.platform kernelPatches configfile) // {
+stdenv.mkDerivation ((drvAttrs config stdenv.hostPlatform.platform kernelPatches configfile) // {
   name = "linux-${version}";
 
   enableParallelBuilding = true;
@@ -268,7 +267,7 @@ stdenv.mkDerivation ((drvAttrs config hostPlatform.platform kernelPatches config
       ++ optionals (stdenv.lib.versionAtLeast version "4.16") [ bison flex ]
       ;
 
-  hardeningDisable = [ "bindnow" "format" "fortify" "stackprotector" "pic" ];
+  hardeningDisable = [ "bindnow" "format" "fortify" "stackprotector" "pic" "pie" ];
 
   # Absolute paths for compilers avoid any PATH-clobbering issues.
   makeFlags = commonMakeFlags ++ [
@@ -279,5 +278,5 @@ stdenv.mkDerivation ((drvAttrs config hostPlatform.platform kernelPatches config
     "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
   ];
 
-  karch = hostPlatform.platform.kernelArch;
+  karch = stdenv.hostPlatform.platform.kernelArch;
 })

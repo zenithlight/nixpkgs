@@ -1,11 +1,11 @@
-{ stdenv, hostPlatform, fetchurl, perl, gettext, LocaleGettext }:
+{ stdenv, fetchurl, perl, gettext, LocaleGettext }:
 
 stdenv.mkDerivation rec {
-  name = "help2man-1.47.6";
+  name = "help2man-1.47.8";
 
   src = fetchurl {
     url = "mirror://gnu/help2man/${name}.tar.xz";
-    sha256 = "0vz4dlrvy4vc6l7w0a7n668pfa0rdm73wr2gar58wqranyah46yr";
+    sha256 = "1p5830h88cx0zn0snwaj0vpph81xicpsirfwlxmcgjrlmn0nm3sj";
   };
 
   nativeBuildInputs = [ gettext LocaleGettext ];
@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
 
   doCheck = false;                                # target `check' is missing
 
-  patches = if hostPlatform.isCygwin then [ ./1.40.4-cygwin-nls.patch ] else null;
+  patches = if stdenv.hostPlatform.isCygwin then [ ./1.40.4-cygwin-nls.patch ] else null;
 
   # We don't use makeWrapper here because it uses substitutions our
   # bootstrap shell can't handle.
@@ -23,8 +23,8 @@ stdenv.mkDerivation rec {
     cat > $out/bin/help2man <<EOF
     #! $SHELL -e
     export PERL5LIB=\''${PERL5LIB:+:}$gettext_perl
-    ${stdenv.lib.optionalString hostPlatform.isCygwin
-        "export PATH=\''${PATH:+:}${gettext}/bin"}
+    ${stdenv.lib.optionalString stdenv.hostPlatform.isCygwin
+        ''export PATH=\''${PATH:+:}${gettext}/bin''}
     exec -a \$0 $out/bin/.help2man-wrapped "\$@"
     EOF
     chmod +x $out/bin/help2man
@@ -38,7 +38,7 @@ stdenv.mkDerivation rec {
          ‘--version’ output of other commands.
       '';
 
-    homepage = http://www.gnu.org/software/help2man/;
+    homepage = https://www.gnu.org/software/help2man/;
 
     license = licenses.gpl3Plus;
     platforms = platforms.all;

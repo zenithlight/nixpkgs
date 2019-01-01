@@ -8,13 +8,13 @@
 # Should use buildPythonPackage here somehow
 stdenv.mkDerivation rec {
   pname = "setuptools";
-  version = "40.0.0";
+  version = "40.6.2";
   name = "${python.libPrefix}-${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
     extension = "zip";
-    sha256 = "012adb8e25fbfd64c652e99e7bab58799a3aaf05d39ab38561f69190a909015f";
+    sha256 = "86bb4d8e1b0fabad1f4642b64c335b673e53e7a381de03c9a89fe678152c4c64";
   };
 
   nativeBuildInputs = [ unzip wrapPython ];

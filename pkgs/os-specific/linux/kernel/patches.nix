@@ -28,16 +28,6 @@ rec {
     patch = ./tag-hardened.patch;
   };
 
-  copperhead_4_14 = rec {
-    name = "copperhead-4.14";
-    patch = ./copperhead-4-14.patch;
-  };
-
-  copperhead_4_16 = rec {
-    name = "copperhead-4.16";
-    patch = ./copperhead-4-16.patch;
-  };
-
   # https://bugzilla.kernel.org/show_bug.cgi?id=197591#c6
   iwlwifi_mvm_support_version_7_scan_req_umac_fw_command = rec {
     name = "iwlwifi_mvm_support_version_7_scan_req_umac_fw_command";
@@ -68,4 +58,14 @@ rec {
     };
   };
 
+  # Reverts a change related to the overlayfs overhaul in 4.19
+  # https://github.com/NixOS/nixpkgs/issues/48828#issuecomment-445208626
+  revert-vfs-dont-open-real = rec {
+    name = "revert-vfs-dont-open-real";
+    patch = fetchpatch {
+      name = name + ".patch";
+      url = https://github.com/samueldr/linux/commit/ee23fa215caaa8102f4ab411d39fcad5858147f2.patch;
+      sha256 = "0bp4jryihg1y2sl8zlj6w7vvnxj0kmb6xdy42hpvdv43kb6ngiaq";
+    };
+  };
 }

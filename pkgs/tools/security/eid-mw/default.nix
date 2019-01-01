@@ -7,10 +7,10 @@
 
 stdenv.mkDerivation rec {
   name = "eid-mw-${version}";
-  version = "4.4.3";
+  version = "4.4.11";
 
   src = fetchFromGitHub {
-    sha256 = "1h90iz4l85drchpkmhlsvg7f9abhw6890fdr9x5n5ir3kxikwcdm"; 
+    sha256 = "13mhz23j2gp5bywdq2xiwkk0gnc354j31ry8x35pzlwrcn19by10"; 
     rev = "v${version}";
     repo = "eid-mw";
     owner = "Fedict";

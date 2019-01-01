@@ -1,19 +1,22 @@
-{ lib, buildPythonPackage, isPy3k, fetchPypi, ipython_genutils, jupyterlab_launcher, notebook }:
+{ lib
+, buildPythonPackage
+, fetchPypi
+, jupyterlab_server
+, notebook
+, pythonOlder
+}:
+
 buildPythonPackage rec {
   pname = "jupyterlab";
-  version = "0.33.7";
-  disabled = !isPy3k;
+  version = "0.35.4";
+  disabled = pythonOlder "3.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "ab9f7bcbc3b4e107897f368aa0527cdc1b4ccf0c370e218ae03ac1d75fac261c";
+    sha256 = "deba0b2803640fcad72c61366bff11d5945173015961586d5e3b2f629ffeb455";
   };
 
-  propagatedBuildInputs = [
-    ipython_genutils
-    jupyterlab_launcher
-    notebook
-  ];
+  propagatedBuildInputs = [ jupyterlab_server notebook ];
 
   makeWrapperArgs = [
     "--set" "JUPYTERLAB_DIR" "$out/share/jupyter/lab"

@@ -1,7 +1,6 @@
 let
-  version     = "2.0.1";
-  sha256      = "0rfq0izpswfwbyvr5kb6zjyf6sd7l1706c0sp7ccy6ykdfb4v6zs";
-  cargoSha256 = "1ij17bfwvikqi5aj71j1nwf3jhkf3y9a0kwydajviwal47p9grl9";
-  patches     = [ ./patches/vendored-sources-2.0.patch ];
+  version     = "2.2.5";
+  sha256      = "0q9vgwc0jlja73r4na7yil624iagq1607ac47wh8a7xgfjmjjai1";
+  cargoSha256 = "0ibdmyh1jvfq51vhwn4riyhilqwhf71hjd4vyj525smn95p75b14";
 in
-  import ./parity.nix { inherit version sha256 cargoSha256 patches; }
+  import ./parity.nix { inherit version sha256 cargoSha256; }

@@ -47,7 +47,7 @@
 with (import ./release_sources.nix);
 
 let
-  arch = if stdenv.system == "i686-linux"
+  arch = if stdenv.hostPlatform.system == "i686-linux"
     then "linux-i686"
     else "linux-x86_64";
 
@@ -159,7 +159,7 @@ stdenv.mkDerivation {
     '';
 
   passthru.updateScript = import ./../../browsers/firefox-bin/update.nix {
-    inherit name writeScript xidel coreutils gnused gnugrep curl gnupg;
+    inherit name stdenv writeScript xidel coreutils gnused gnugrep curl gnupg;
     baseName = "thunderbird";
     channel = "release";
     basePath = "pkgs/applications/networking/mailreaders/thunderbird-bin";

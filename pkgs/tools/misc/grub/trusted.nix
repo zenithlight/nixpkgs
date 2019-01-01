@@ -10,7 +10,7 @@ let
     "x86_64-linux".target = "i386";
   };
 
-  inPCSystems = any (system: stdenv.system == system) (mapAttrsToList (name: _: name) pcSystems);
+  inPCSystems = any (system: stdenv.hostPlatform.system == system) (mapAttrsToList (name: _: name) pcSystems);
 
   version = if for_HP_laptop then "1.2.1" else "1.2.0";
 
@@ -21,7 +21,7 @@ let
 
   po_src = fetchurl {
     name = "grub-2.02-beta2.tar.gz";
-    url = "http://alpha.gnu.org/gnu/grub/grub-2.02~beta2.tar.gz";
+    url = "https://alpha.gnu.org/gnu/grub/grub-2.02~beta2.tar.gz";
     sha256 = "1lr9h3xcx0wwrnkxdnkfjwy08j7g7mdlmmbdip2db4zfgi69h0rm";
 
   };
@@ -84,7 +84,7 @@ stdenv.mkDerivation rec {
 
   # save target that grub is compiled for
   grubTarget = if inPCSystems
-               then "${pcSystems.${stdenv.system}.target}-pc"
+               then "${pcSystems.${stdenv.hostPlatform.system}.target}-pc"
                else "";
 
   doCheck = false;

@@ -7,13 +7,21 @@ with stdenv.lib;
 
 buildGoPackage rec {
   name = "gitea-${version}";
-  version = "1.5.0";
+  version = "1.6.2";
 
   src = fetchFromGitHub {
     owner = "go-gitea";
     repo = "gitea";
     rev = "v${version}";
-    sha256 = "0gp777x8yjbqvz9i79qv3bn3hrlp1bn7ib57r7w5a7jmr9rd0nca";
+    sha256 = "1ijxpihdg8k6gs1xpim0iviqakvjadjzp0a5ki2czykilnyg8y85";
+    # Required to generate the same checksum on MacOS due to unicode encoding differences
+    # More information: https://github.com/NixOS/nixpkgs/pull/48128
+    extraPostFetch = ''
+      rm -rf $out/integrations
+      rm -rf $out/vendor/github.com/Unknown/cae/tz/testdata
+      rm -rf $out/vendor/github.com/Unknown/cae/zip/testdata
+      rm -rf $out/vendor/gopkg.in/macaron.v1/fixtures
+    '';
   };
 
   patches = [ ./static-root-path.patch ];
@@ -25,13 +33,18 @@ buildGoPackage rec {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  buildFlags = optionalString sqliteSupport "-tags sqlite";
+  buildFlags = optional sqliteSupport "-tags sqlite";
+  buildFlagsArray = ''
+    -ldflags=
+      -X=main.Version=${version}
+      ${optionalString sqliteSupport "-X=main.Tags=sqlite"}
+  '';
 
   outputs = [ "bin" "out" "data" ];
 
   postInstall = ''
     mkdir $data
-    cp -R $src/{public,templates} $data
+    cp -R $src/{public,templates,options} $data
     mkdir -p $out
     cp -R $src/options/locale $out/locale
 

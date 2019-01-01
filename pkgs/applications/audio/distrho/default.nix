@@ -1,7 +1,13 @@
 { stdenv, fetchFromGitHub, alsaLib, fftwSinglePrec, freetype, libjack2
-, pkgconfig, premake3, xorg, ladspa-sdk }:
+, pkgconfig, ladspa-sdk, premake3
+, libX11, libXcomposite, libXcursor, libXext, libXinerama, libXrender
+}:
 
-stdenv.mkDerivation rec {
+let
+  premakeos = if stdenv.hostPlatform.isDarwin then "osx"
+              else if stdenv.hostPlatform.isWindows then "mingw"
+              else "linux";
+in stdenv.mkDerivation rec {
   name = "distrho-ports-${version}";
   version = "2018-04-16";
 
@@ -12,27 +18,26 @@ stdenv.mkDerivation rec {
     sha256 = "0l4zwl4mli8jzch32a1fh7c88r9q17xnkxsdw17ds5hadnxlk12v";
   };
 
+  configurePhase = ''
+    runHook preConfigure
+
+    sh ./scripts/premake-update.sh ${premakeos}
+
+    runHook postConfigure
+  '';
+
   patchPhase = ''
     sed -e "s#@./scripts#sh scripts#" -i Makefile
   '';
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkgconfig premake3 ];
   buildInputs = [
-    alsaLib fftwSinglePrec freetype libjack2 premake3
-    xorg.libX11 xorg.libXcomposite xorg.libXcursor xorg.libXext
-    xorg.libXinerama xorg.libXrender ladspa-sdk
+    alsaLib fftwSinglePrec freetype libjack2
+    libX11 libXcomposite libXcursor libXext
+    libXinerama libXrender ladspa-sdk
   ];
 
-  buildPhase = ''
-    sh ./scripts/premake-update.sh linux
-    make lv2
-  '';
-
-  installPhase = ''
-    mkdir -p $out/bin
-    mkdir -p $out/lib/lv2
-    cp -a bin/lv2/* $out/lib/lv2/
-  '';
+  makeFlags = "PREFIX=$(out)";
 
   meta = with stdenv.lib; {
     homepage = http://distrho.sourceforge.net;
@@ -46,6 +51,7 @@ stdenv.mkDerivation rec {
       TAL-Filter-2 TAL-NoiseMaker TAL-Reverb TAL-Reverb-2 TAL-Reverb-3
       TAL-Vocoder-2 TheFunction ThePilgrim Vex Wolpertinger
     '';
+    license = with licenses; [ gpl2 gpl3 gpl2Plus lgpl3 mit ];
     maintainers = [ maintainers.goibhniu ];
     platforms = [ "x86_64-linux" ];
   };

@@ -1,6 +1,5 @@
 { stdenv, fetchurl
 , ed, autoreconfHook
-, buildPlatform, hostPlatform
 }:
 
 stdenv.mkDerivation rec {
@@ -24,14 +23,14 @@ stdenv.mkDerivation rec {
     })
   ];
 
-  buildInputs = stdenv.lib.optional doCheck ed;
   nativeBuildInputs = [ autoreconfHook ];
 
-  configureFlags = stdenv.lib.optionals (hostPlatform != buildPlatform) [
+  configureFlags = stdenv.lib.optionals (stdenv.hostPlatform != stdenv.buildPlatform) [
     "ac_cv_func_strnlen_working=yes"
   ];
 
-  doCheck = hostPlatform.libc != "musl"; # not cross;
+  doCheck = stdenv.hostPlatform.libc != "musl"; # not cross;
+  checkInputs = [ed];
 
   meta = {
     description = "GNU Patch, a program to apply differences to files";
@@ -42,7 +41,7 @@ stdenv.mkDerivation rec {
          more original files, producing patched versions.
       '';
 
-    homepage = http://savannah.gnu.org/projects/patch;
+    homepage = https://savannah.gnu.org/projects/patch;
 
     license = stdenv.lib.licenses.gpl3Plus;
 

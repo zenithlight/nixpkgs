@@ -1,20 +1,22 @@
-{ lib, buildPythonPackage, fetchPypi
-, cheroot, portend, routes, six
-, setuptools_scm
+{ lib, buildPythonPackage, fetchPypi, isPy3k
+, cheroot, contextlib2, portend, routes, six
+, setuptools_scm, zc_lockfile
 , backports_unittest-mock, objgraph, pathpy, pytest, pytestcov
 , backports_functools_lru_cache, requests_toolbelt
 }:
 
 buildPythonPackage rec {
   pname = "CherryPy";
-  version = "17.0.0";
+  version = "18.0.1";
+
+  disabled = !isPy3k;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "3cdb5fbae183db49ab1f1a90643d521aa060c93f90001cc99c19d8d15b7a3fb7";
+    sha256 = "3002fc47b982c3df4d08dbe5996b093fd73f85b650ab8df19e8b9b95f5c00520";
   };
 
-  propagatedBuildInputs = [ cheroot portend routes six ];
+  propagatedBuildInputs = [ cheroot contextlib2 portend routes six zc_lockfile ];
 
   buildInputs = [ setuptools_scm ];
 

@@ -7,7 +7,7 @@
 
 buildPythonPackage rec {
   pname = "astropy";
-  version = "3.0.3";
+  version = "3.1";
 
   disabled = !isPy3k; # according to setup.py
 
@@ -15,7 +15,7 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "6af07abe5e263820a3dec93832a6ad74005013071490e125afbc6514411721da";
+    sha256 = "1ldmdwfp0g8293k4gyp962nv7ik4zw83p1khkq8jqkzmk7qf040y";
   };
 
   propagatedBuildInputs = [ pytest numpy ]; # yes it really has pytest in install_requires

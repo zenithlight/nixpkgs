@@ -5,13 +5,13 @@ with lib;
 
 stdenv.mkDerivation rec {
   name = "containerd-${version}";
-  version = "1.1.2";
+  version = "1.2.1";
 
   src = fetchFromGitHub {
     owner = "containerd";
     repo = "containerd";
     rev = "v${version}";
-    sha256 = "1rp015cm5fw9kfarcmfhfkr1sh0iz7kvqls6f8nfhwrrz5armd5v";
+    sha256 = "16zn6p1ky3yrgn53z8h9wza53ch91fj47wj5xgz6w4c57j30f66p";
   };
 
   hardeningDisable = [ "fortify" ];
@@ -45,7 +45,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage = https://containerd.tools/;
+    homepage = https://containerd.io/;
     description = "A daemon to control runC";
     license = licenses.asl20;
     maintainers = with maintainers; [ offline vdemeester ];

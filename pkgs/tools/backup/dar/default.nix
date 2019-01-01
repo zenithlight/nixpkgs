@@ -3,12 +3,12 @@
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  version = "2.5.16";
+  version = "2.5.18";
   name = "dar-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/dar/${name}.tar.gz";
-    sha256 = "0fy39y6kfda0lvbymc0dblvzmli5y9bq81q0r8fwjzd105qwjmz9";
+    sha256 = "14002ai4xji0dczgiargxs3z8yylswj8z94higcsw09xk13izlkk";
   };
 
   buildInputs = [ zlib bzip2 openssl lzo libgcrypt gpgme xz ]
@@ -33,7 +33,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://dar.linux.free.fr;
     description = "Disk ARchiver, allows backing up files into indexed archives";
-    maintainers = with maintainers; [ ];
+    license = licenses.gpl2;
     platforms = platforms.unix;
   };
 }

@@ -16,7 +16,8 @@ in
   ];
 
   assertions = lib.singleton {
-    assertion = pkgs.stdenv.system == "aarch64-linux";
+    assertion = pkgs.stdenv.hostPlatform.system == "aarch64-linux"
+      && pkgs.stdenv.hostPlatform.system == pkgs.stdenv.buildPlatform.system;
     message = "sd-image-aarch64.nix can be only built natively on Aarch64 / ARM64; " +
       "it cannot be cross compiled";
   };
@@ -25,7 +26,6 @@ in
   boot.loader.generic-extlinux-compatible.enable = true;
 
   boot.consoleLogLevel = lib.mkDefault 7;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # The serial ports listed here are:
   # - ttyS0: for Tegra (Jetson TX1)

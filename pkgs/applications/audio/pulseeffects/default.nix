@@ -4,6 +4,7 @@
 , ninja
 , pkgconfig
 , itstool
+, python3
 , libxml2
 , desktop-file-utils
 , wrapGAppsHook
@@ -43,13 +44,13 @@ let
   ];
 in stdenv.mkDerivation rec {
   name = "pulseeffects-${version}";
-  version = "4.3.3";
+  version = "4.4.1";
 
   src = fetchFromGitHub {
     owner = "wwmm";
     repo = "pulseeffects";
     rev = "v${version}";
-    sha256 = "1krfxvwqimfcsv7f2l722ivzz0qdf5h0pmb702mg65qb160zn065";
+    sha256 = "0hb575h9hdknhwvhn5lak89ddavn4v5c0nipnv8dsfnmjhfli5qm";
   };
 
   nativeBuildInputs = [
@@ -58,6 +59,7 @@ in stdenv.mkDerivation rec {
     pkgconfig
     libxml2
     itstool
+    python3
     desktop-file-utils
     wrapGAppsHook
   ];

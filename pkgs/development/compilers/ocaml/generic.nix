@@ -24,11 +24,13 @@ let
    name = "ocaml${optionalString flambdaSupport "+flambda"}-${version}";
 in
 
-stdenv.mkDerivation (args // rec {
-
+let
   x11env = buildEnv { name = "x11env"; paths = [libX11 xproto]; };
   x11lib = x11env + "/lib";
   x11inc = x11env + "/include";
+in
+
+stdenv.mkDerivation (args // rec {
 
   inherit name;
   inherit version;
@@ -90,6 +92,7 @@ stdenv.mkDerivation (args // rec {
       '';
 
     platforms = with platforms; linux ++ darwin;
+    broken = stdenv.isAarch64 && !stdenv.lib.versionAtLeast version "4.06";
   };
 
 })

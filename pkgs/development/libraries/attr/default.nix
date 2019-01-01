@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, gettext, hostPlatform }:
+{ stdenv, fetchurl, gettext }:
 
 stdenv.mkDerivation rec {
   name = "attr-2.4.47";
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
 
   installTargets = [ "install" "install-lib" "install-dev" ];
 
-  patches = if (hostPlatform.libc == "musl") then [ ./fix-headers-musl.patch ] else null;
+  patches = if (stdenv.hostPlatform.libc == "musl") then [ ./fix-headers-musl.patch ] else null;
 
   postPatch = ''
     for script in install-sh include/install-sh; do
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage = "http://savannah.nongnu.org/projects/attr/";
+    homepage = "https://savannah.nongnu.org/projects/attr/";
     description = "Library and tools for manipulating extended attributes";
     platforms = platforms.linux;
     license = licenses.gpl2Plus;

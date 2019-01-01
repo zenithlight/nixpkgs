@@ -8,11 +8,12 @@ stdenv.mkDerivation rec {
   version="4.4.2";
 
   src = fetchurl {
-    url = "http://download.gna.org/allegro/allegro/${version}/${name}.tar.gz";
+    url = "https://github.com/liballeg/allegro5/releases/download/${version}/${name}.tar.gz";
     sha256 = "1p0ghkmpc4kwij1z9rzxfv7adnpy4ayi0ifahlns1bdzgmbyf88v";
   };
 
   patches = [
+    ./allegro4-mesa-18.2.5.patch
     ./nix-unstable-sandbox-fix.patch
   ];
 

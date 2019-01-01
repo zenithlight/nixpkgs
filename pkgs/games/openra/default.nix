@@ -4,8 +4,8 @@
 }:
 
 stdenv.mkDerivation rec {
-  name = "openra-${version}";
-  version = "20180307";
+  pname = "openra";
+  version = "20181215";
 
   meta = with stdenv.lib; {
     description = "Real Time Strategy game engine recreating the C&C titles";
@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
     owner = "OpenRA";
     repo = "OpenRA";
     rev = "release-${version}";
-    sha256 = "05c6vrmlgzfxgfx1idqmp6czmr079px3n57q5ahnwzqvcl11a2jj";
+    sha256 = "0p0izykjnz7pz02g2khp7msqa00jhjsrzk9y0g29dirmdv75qa4r";
 
     extraPostFetch = ''
       sed -i 's,curl,curl --insecure,g' $out/thirdparty/{fetch-thirdparty-deps,noget}.sh
@@ -64,9 +64,16 @@ stdenv.mkDerivation rec {
   in ''
     wrapProgram $out/lib/openra/launch-game.sh \
       --prefix PATH : "${binaries}" \
-      --prefix LD_LIBRARY_PATH : "${runtime}"
+      --prefix LD_LIBRARY_PATH : "${runtime}" \
+      --set TERM "xterm"
 
     mkdir -p $out/bin
     makeWrapper $out/lib/openra/launch-game.sh $out/bin/openra --run "cd $out/lib/openra"
+    printf "#!/bin/sh\nexec $out/bin/openra Game.Mod=ra" > $out/bin/openra-ra
+    chmod +x $out/bin/openra-ra
+    printf "#!/bin/sh\nexec $out/bin/openra Game.Mod=cnc" > $out/bin/openra-cnc
+    chmod +x $out/bin/openra-cnc
+    printf "#!/bin/sh\nexec $out/bin/openra Game.Mod=d2k" > $out/bin/openra-d2k
+    chmod +x $out/bin/openra-d2k
   '';
 }

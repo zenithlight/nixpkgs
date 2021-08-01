@@ -44,9 +44,9 @@ in rec {
 
   unstable = fetchurl rec {
     # NOTE: Don't forget to change the SHA256 for staging as well.
-    version = "6.13";
+    version = "6.14";
     url = "https://dl.winehq.org/wine/source/6.x/wine-${version}.tar.xz";
-    sha256 = "sha256-4DohoBHUXSrp8iIED7dpC5cVY3bnQx+GHyAHPq8k8oo=";
+    sha256 = "00jjqbl0xzsp2swzxgx3a2b16p26qbxvcz82a7ihig23k69p3d34";
     inherit (stable) gecko32 gecko64;
 
     ## see http://wiki.winehq.org/Mono

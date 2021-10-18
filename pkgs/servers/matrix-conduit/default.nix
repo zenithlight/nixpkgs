@@ -9,7 +9,7 @@ rustPlatform.buildRustPackage rec {
     owner = "famedly";
     repo = "conduit";
     rev = "v${version}";
-    sha256 = "09c824392p2q6ir2ar0wfrbp8y2pfn0kwxhwi3ab5s03bs8bps7j";
+    sha256 = "uU295/ZEsEK15m//PXIasepnYVKyB4nG2SmNbdcIY0w=";
   };
 
   cargoSha256 = "0379dvc8m8clc9lrxd1x0aciqvcgv3hjq7xfspz3bh8aq2a43pcs";
